@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "pump_GUI_XY160-D_driver"
+		},
+		{
+			"path": "PUMP_UNO_XY160-D_driver"
+		},
+		{
+			"name": "test",
+			"path": "../../../../../../PlatformIO/Projects/test"
+		}
+	]
+}

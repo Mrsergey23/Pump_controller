@@ -15,7 +15,7 @@ main elemant of LAZER system.
   to increment up with freq_step.
 */
 
-//!! перестают высылаться данные посел перехода во второй режим работы
+//!! перестают высылаться данные после перехода во второй режим работы (разгон)
 
 #include <Arduino.h>
 #include <GyverTimers.h> // for interrupts by Timers and generating signals 
@@ -34,6 +34,12 @@ main elemant of LAZER system.
 /*define periods of timers on millis()*/
 #define PERIOD_DATA_FROM_SENSORS 1000
 
+/*define comannds for controling by UART ("cases")*/
+#define CONST_FREQ  3
+#define STOP_ALL    2
+#define ACCEL_ON    4 
+
+
 /*--------------Information about driver and pump engine--------------*/
 /*I am using driver in unnormal way. Ther normal way: Constant signal (
   HIGH or LOW to IN1 and LOW and HIGH (signals depends on direction, watch documentation) to IN2 and PWM to ENA, but i don't need to
@@ -43,13 +49,14 @@ main elemant of LAZER system.
   for IN1 and IN2 pins of motor driver I allow to generating bipolar square signal for this engine
 */
 volatile uint16_t  P_pulse_Count;
-uint32_t Current_Time, Loop_Time, Timer_stepper;
+uint32_t Current_Time, Loop_Time, Timer_stepper, loop_accelerating;
 int16_t A_zero_level;
 uint16_t A_current_calc, A_sensorValue, P_liter_per_hour; 
 uint16_t data[10];
+bool flag;
 int send_pack[2]; // возможно изменить на int, как в оригинале
-volatile int16_t start_freq,freq_step,
-finish_freq, time_step;                       // variable for increasing speed at the start engine
+uint16_t freq_step, finish_freq, time_step, total_freq;
+uint16_t start_freq;                       // variable for increasing speed at the start engine
 void m_NeedStopAll();
 void m_InitTimers();
 void IRQ_flow();
@@ -63,17 +70,17 @@ void setup()
   Serial.begin(115200);
   A_zero_level = getSmoothedValue(ACS712_PIN); // define zero scale (before turn on load)
   attachInterrupt(0, IRQ_flow, RISING);                              
-  Current_Time = millis();
-  Loop_Time = Current_Time;
+  // Current_Time = millis();
+  // Loop_Time = Current_Time;
   digitalWrite(FLOW_PIN, HIGH);     // optional internal pull-Up
   m_InitTimers();
+  TCCR1A = TCCR1A & 0x0F;
 }
 
 void loop() 
 {
   if (Serial.availableForWrite() > 0)         // waiting command by serial
   {
-     
     Current_Time = millis();
     if(Current_Time >= (Loop_Time + PERIOD_DATA_FROM_SENSORS))
     {
@@ -84,47 +91,54 @@ void loop()
       A_sensorValue = getSmoothedValue(ACS712_PIN); // читаем значение с АЦП и выводим в монитор
       A_current_calc = getCurrent(A_sensorValue); // преобразуем в значение тока и выводим в монитор
       send_pack[1] = A_current_calc; 
-      m_SendData(0,send_pack, 3);
-      // Serial.print(0);
-      // Serial.print(',');
-      // Serial.print(P_liter_per_hour);
-      // Serial.print(',');
-      // Serial.println(A_current_calc); 
-    }
+      m_SendData(0,send_pack, 2);
+    }  
     m_ReceiveData(); // parsing of receiving command from GUI by UART
     switch (data[0])
     {
 
-    case 0:
+    case CONST_FREQ: // Const frequency
+      // TCCR1C = (TCCR1C&0xBF)|(1<<FOC1A)|(0<<FOC2B);
+      TCCR1A = (TCCR1A&0x0F)|1<<6|1<<4; 
+
       Timer1.setFrequency(data[1]*2);
       digitalWrite(ENA, data[2]);
       break;
-
-    case 1:
+    case STOP_ALL: //Stop all
+      //TCCR1C = (TCCR1C&0x3F);
+      //TCCR1A = TCCR1A & 0x0F;
+      digitalWrite(ENA, 0);
+      break;
+    case ACCEL_ON: // Accelearating mode
+      TCCR1A = (TCCR1A&0x0F)|1<<6|1<<4; 
       start_freq = data[1];
       finish_freq = data[2];
       time_step = data[3];
       freq_step = data[5]; 
+      digitalWrite(ENA, 1);
+      while (start_freq <= finish_freq)
+      {
+      Timer_stepper = millis();
+        if (Timer_stepper >= loop_accelerating + time_step) 
+        {   //Timer with period "time_step"
+          loop_accelerating = Timer_stepper;           // reset timer
+          Timer1.setFrequency(start_freq * 2);
+          start_freq +=  freq_step; 
+        }
+      }
+
+      break;
+
       // Timer0.setFrequency(2*1000/time_step); // проба сделать на встроенном таймере (пока не стал разбираться в ошибках)
       // Timer0.enableISR(CHANNEL_B);
-      if (millis() - Timer_stepper >= time_step) 
-      {   //Timer with period "time_step"
-        Timer_stepper = millis();              // reset timer
-        if (start_freq<=finish_freq)
-        {
-          start_freq += freq_step; 
-        } 
-      }
-      while(start_freq < finish_freq)
-      {
-        Timer1.setFrequency(start_freq * 2);
-      }
-      break;
-    default:
-      m_NeedStopAll(); // проверка нужна ли остановка двигателей
+      
+
+    //default:
+      //m_NeedStopAll(); // проверка нужна ли остановка двигателей
     }
   }
 }
+
 
 // ISR(TIMER0_B)
 // { 

@@ -477,17 +477,17 @@ font: 10pt &quot;Helvetica&quot;;</string>
         <item>
          <widget class="QLabel" name="EngineCurrentLabel">
           <property name="text">
-           <string>Engine Current</string>
+           <string> Water Flow Sensor</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLCDNumber" name="currentLCD"/>
+         <widget class="QLCDNumber" name="WFS_LCD"/>
         </item>
         <item>
          <widget class="QLabel" name="CurrentUnitLabel">
           <property name="text">
-           <string>mA</string>
+           <string>L/hour</string>
           </property>
          </widget>
         </item>

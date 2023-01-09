@@ -14,9 +14,6 @@ main elemant of LAZER system.
   4 parameters: start_freq, finish_freq, time_step, freq_step. It means interupt with period time_step
   to increment up with freq_step.
 */
-
-//!! перестают высылаться данные после перехода во второй режим работы (разгон)
-
 #include <Arduino.h>
 #include <GyverTimers.h> // for interrupts by Timers and generating signals 
 #include "m_ACS712.h"
@@ -88,8 +85,8 @@ void loop()
       P_liter_per_hour = (P_pulse_Count * 60 / 7.5);
       P_pulse_Count = 0;
       send_pack[0] = P_liter_per_hour;
-      A_sensorValue = getSmoothedValue(ACS712_PIN); // читаем значение с АЦП и выводим в монитор
-      A_current_calc = getCurrent(A_sensorValue); // преобразуем в значение тока и выводим в монитор
+      A_sensorValue = getSmoothedValue(ACS712_PIN); // читаем значение с АЦП 
+      A_current_calc = getCurrent(A_sensorValue); // преобразуем в значение тока 
       send_pack[1] = A_current_calc; 
       m_SendData(0,send_pack, 2);
     }  

@@ -33,20 +33,23 @@ main elemant of LAZER system.
 /* global variables */
 float I_ACS_value; 
 extern uint16_t P_flow_sensor_value;
-
 uint32_t Current_Time, Loop_Time, \
 Timer_stepper, loop_accelerating;
 int16_t A_zero_level;
 uint16_t A_current_calc, A_sensorValue; // variables hold the 
 uint16_t data[10];                      // array of receiving data
-bool flag;
 int send_pack[2];                       // array to collect for data transmission                      
-uint16_t freq_step, finish_freq, \
-time_step, total_freq, start_freq;      // variable for increasing speed at the start engine
 
-ACS712 sensor(ACS712_30A, A0);          // make an example of class for ACS712 current sensor
+struct accel_param
+{
+  uint16_t freq_step, finish_freq, \
+  time_step, total_freq, start_freq;    // variable for increasing speed at the start engine
+};
 
-void m_StopAll();
+accel_param Data_accel ;
+ACS712 sensor(ACS712_30A, A0);          // make an reference of class for ACS712 current sensor
+
+void m_StopAll();                       // if one of the receiving parameters is 0 then turn off engine
 
 void setup() 
 {
@@ -85,23 +88,23 @@ void loop()
 
     case ACCEL_ON: // Accelearating mode
       TCCR1A = (TCCR1A&0x0F)|1<<6|1<<4;
-      start_freq = data[1];
-      finish_freq = data[2];
-      time_step = data[3];
-      freq_step = data[5]; 
+      Data_accel.start_freq = data[1];
+      Data_accel.finish_freq = data[2];
+      Data_accel.time_step = data[3];
+      Data_accel.freq_step = data[5]; 
       digitalWrite(ENA, 1);
-      while (start_freq <= finish_freq)
+      while (Data_accel.start_freq <= Data_accel.finish_freq)
       {
       Timer_stepper = millis();
-        if (Timer_stepper >= loop_accelerating + time_step) 
+        if (Timer_stepper >= loop_accelerating + Data_accel.time_step) 
         {   //Timer with period "time_step"
           loop_accelerating = Timer_stepper;           // reset timer
-          Timer1.setFrequency(start_freq * 2);
+          Timer1.setFrequency(Data_accel.start_freq * 2);
           send_pack[0] = m_GetValue_FlowSensor(PERIOD_DATA_FROM_SENSORS);
           I_ACS_value = sensor.getCurrentDC();
           send_pack[1] = I_ACS_value*100; 
           m_SendData(0,send_pack, 2);
-          start_freq +=  freq_step; 
+          Data_accel.start_freq +=  Data_accel.freq_step; 
         }
       }
 

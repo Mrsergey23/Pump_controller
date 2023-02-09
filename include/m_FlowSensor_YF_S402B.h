@@ -1,10 +1,11 @@
 #ifndef _M_FLOW_SENSOR_YF_S402B__
 #define _M_FLOW_SENSOR_YF_S402B__
-#include <Arduino.h>
-extern uint32_t Current_Time, Loop_Time;
-extern uint16_t P_liter_per_hour;
+
+
+void m_Flow_init(const uint8_t flow_pin);
+uint16_t m_GetValue_FlowSensor(const uint16_t period_sec);
 void IRQ_flow(); // IRQ Handler (requre interrupt 1 per 1 second)
-void m_GetValue_FlowSensor();
+
 
 
 #endif //_M_FLOW_SENSOR_YF_S402B__

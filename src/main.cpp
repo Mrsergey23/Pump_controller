@@ -1,4 +1,4 @@
-/* ------------Description of the project--------------- */
+/* ------------Description of the project--------------------------*/
 /*
 Latest version of project pump, which called Acquastream XT
   Trying to start up the engine, because the electric part of device
@@ -21,31 +21,33 @@ main elemant of LAZER system.
 #include "ACS712.h"
 #include "m_ReceiveSendData.h"
 
-/*--------------Defines of required pins---------------*/
+/*--------------Defines of required pins---------------------------*/
 #define ACS712_PIN  A0   // any analog pin. Current sensor ACS-712 30 A max. 
 #define FLOW_PIN    2    // any input digital pin. Sensor YF-S402B. sensoring of flow liquid, like in our homes 
 #define IN1         9   // 1 output of Timer 1, because it's 16  bits Timer. Motor driver 1 pin to choose diagonal of H-bridge (driver XY-160D)
 #define IN2         10    // 2 output of Timer 1, second pin of motor driver to choose the other ddiagonal of H-bridge (driver XY-160D)
 #define ENA         8    // any digital output pin, here we use it only for enable to rotate engine (HIGH signal) or disable (LOW signal) (driver XY-160D)
-/*--------------End of defines--------------- */
+/*--------------End of defines-------------------------------------*/
 
-/*define periods of timers on millis()*/
+/* define periods of timers on millis() */
 #define PERIOD_DATA_FROM_SENSORS 10
 
-/*define comannds for controling by UART ("cases")*/
+/* define comannds for controling by UART ("cases") */
 #define CONST_FREQ  3
 #define STOP_ALL    2
 #define ACCEL_ON    4 
 
 
-/*--------------Information about driver and pump engine--------------*/
-/*I am using driver in unnormal way. Ther normal way: Constant signal (
+/*--------------Information about driver and pump engine-----------*/
+/*
+  I am using driver in unnormal way. Ther normal way: Constant signal (
   HIGH or LOW to IN1 and LOW and HIGH (signals depends on direction, watch documentation) to IN2 and PWM to ENA, but i don't need to
   chose direction due to special design of motor of pump. In addition
   it is two-phase sensorless (without default Hall sensor) BLDC motor and I need
   special way to start-up and control this. Generating of two square signals by Tymer 1
   for IN1 and IN2 pins of motor driver I allow to generating bipolar square signal for this engine
 */
+
 volatile uint16_t  P_pulse_Count;
 uint32_t Current_Time, Loop_Time, Timer_stepper, loop_accelerating;
 int16_t A_zero_level;
@@ -96,16 +98,13 @@ void loop()
     switch (data[0])
     {
 
-    case CONST_FREQ: // Const frequency
-      // TCCR1C = (TCCR1C&0xBF)|(1<<FOC1A)|(0<<FOC2B);
+    case CONST_FREQ: // Const frequency mode
       TCCR1A = (TCCR1A&0x0F)|1<<6|1<<4; 
 
       Timer1.setFrequency(data[1]*2);
       digitalWrite(ENA, data[2]);
       break;
-    case STOP_ALL: //Stop all
-      //TCCR1C = (TCCR1C&0x3F);
-      //TCCR1A = TCCR1A & 0x0F;
+    case STOP_ALL: 
       digitalWrite(ENA, 0);
       break;
     case ACCEL_ON: // Accelearating mode
@@ -139,8 +138,8 @@ void loop()
       // Timer0.enableISR(CHANNEL_B);
       
 
-    //default:
-      //m_NeedStopAll(); // проверка нужна ли остановка двигателей
+    default:
+      m_NeedStopAll(); // проверка нужна ли остановка двигателей
     }
   }
 }

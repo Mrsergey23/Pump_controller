@@ -9,7 +9,7 @@ import pandas as pd
 import csv
 
 app = QtWidgets.QApplication([])
-ui = uic.loadUi("GUI_QT_Main.ui")
+ui = uic.loadUi("pump_GUI_XY160-D_driver/GUI_QT_Main.ui")
 ui.setWindowTitle("Pump Control GUI")
 
 
@@ -146,6 +146,7 @@ def startOn():
         ui.ManualSetCheckBox.setEnabled(True)
         ui.AutoSetCheckBox.setEnabled(True)
         ui.AccelarationStartButton.setEnabled(False)
+    ui.GraphCurrent.clearPlots()
 def engineAcceleration():
     if (ui.AutoSetCheckBox.isChecked() & ui.StartButton.isChecked()):
         start_value = ui.StartFreqSpinBox.value()

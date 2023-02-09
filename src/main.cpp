@@ -1,5 +1,5 @@
-/* ------------Description of the project---------------
-
+/* ------------Description of the project--------------- */
+/*
 Latest version of project pump, which called Acquastream XT
   Trying to start up the engine, because the electric part of device
 was burned or broken. 
@@ -18,6 +18,7 @@ main elemant of LAZER system.
 #include <GyverTimers.h> // for interrupts by Timers and generating signals 
 #include "m_ACS712.h"
 // #include "m_FlowSensor_YF_S402B.h"
+#include "ACS712.h"
 #include "m_ReceiveSendData.h"
 
 /*--------------Defines of required pins---------------*/
@@ -29,7 +30,7 @@ main elemant of LAZER system.
 /*--------------End of defines--------------- */
 
 /*define periods of timers on millis()*/
-#define PERIOD_DATA_FROM_SENSORS 1000
+#define PERIOD_DATA_FROM_SENSORS 10
 
 /*define comannds for controling by UART ("cases")*/
 #define CONST_FREQ  3
@@ -54,6 +55,9 @@ bool flag;
 int send_pack[2]; // возможно изменить на int, как в оригинале
 uint16_t freq_step, finish_freq, time_step, total_freq;
 uint16_t start_freq;                       // variable for increasing speed at the start engine
+
+ACS712 sensor(ACS712_30A, A0);
+
 void m_NeedStopAll();
 void m_InitTimers();
 void IRQ_flow();
@@ -65,10 +69,8 @@ void setup()
   pinMode(ENA, OUTPUT);
   pinMode(FLOW_PIN, INPUT);  
   Serial.begin(115200);
-  A_zero_level = getSmoothedValue(ACS712_PIN); // define zero scale (before turn on load)
+  int zero = sensor.calibrate();
   attachInterrupt(0, IRQ_flow, RISING);                              
-  // Current_Time = millis();
-  // Loop_Time = Current_Time;
   digitalWrite(FLOW_PIN, HIGH);     // optional internal pull-Up
   m_InitTimers();
   TCCR1A = TCCR1A & 0x0F;
@@ -85,9 +87,9 @@ void loop()
       P_liter_per_hour = (P_pulse_Count * 60 / 7.5);
       P_pulse_Count = 0;
       send_pack[0] = P_liter_per_hour;
-      A_sensorValue = getSmoothedValue(ACS712_PIN); // читаем значение с АЦП 
-      A_current_calc = getCurrent(A_sensorValue); // преобразуем в значение тока 
-      send_pack[1] = A_current_calc; 
+      float I = sensor.getCurrentDC();
+      //A_sensorValue = getSmoothedValue(I); // читаем значение с АЦП 
+      send_pack[1] = I*100; 
       m_SendData(0,send_pack, 2);
     }  
     m_ReceiveData(); // parsing of receiving command from GUI by UART
@@ -121,6 +123,13 @@ void loop()
           loop_accelerating = Timer_stepper;           // reset timer
           Timer1.setFrequency(start_freq * 2);
           start_freq +=  freq_step; 
+          P_liter_per_hour = (P_pulse_Count * 60 / 7.5);
+          P_pulse_Count = 0;
+          send_pack[0] = P_liter_per_hour;
+          float I = sensor.getCurrentDC();
+          //A_sensorValue = getSmoothedValue(I); // читаем значение с АЦП 
+          send_pack[1] = I*100; 
+          m_SendData(0,send_pack, 2);
         }
       }
 

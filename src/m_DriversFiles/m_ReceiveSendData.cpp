@@ -25,5 +25,5 @@ void m_SendData(int key, int* data, int amount) {
     Serial.print(data[i]);
     if (i != amount - 1) Serial.print(',');
   }
-  Serial.print('\r');
+  Serial.print('\n');
 }

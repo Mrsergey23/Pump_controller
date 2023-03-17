@@ -84,7 +84,7 @@ void loop()
     if(Current_Time >= (Loop_Time + PERIOD_DATA_FROM_SENSORS))
     {
       Loop_Time = Current_Time;
-      P_liter_per_hour = (P_pulse_Count * 60 / 7.5);
+      P_liter_per_hour = (P_pulse_Count * 60 * 1000/PERIOD_DATA_FROM_SENSORS / 7.5);
       P_pulse_Count = 0;
       send_pack[0] = P_liter_per_hour;
       float I = sensor.getCurrentDC();
@@ -123,7 +123,7 @@ void loop()
           loop_accelerating = Timer_stepper;           // reset timer
           Timer1.setFrequency(start_freq * 2);
           start_freq +=  freq_step; 
-          P_liter_per_hour = (P_pulse_Count * 60 / 7.5);
+          P_liter_per_hour = (P_pulse_Count * 60 * 1000/time_step / 7.5);
           P_pulse_Count = 0;
           send_pack[0] = P_liter_per_hour;
           float I = sensor.getCurrentDC();

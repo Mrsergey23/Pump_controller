@@ -59,11 +59,10 @@ def onOpen():  # open COM-port
    
 def onClose():
     # сохраняем данные с момента подключения к COM-порту и до закрытия (данные приходят раз в 1 сек)
-    StopAll()
     if ui.AutoSetCheckBox.isChecked():
-        file_name = "data_from_sensors" + str(ui.StartFreqSpinBox.value()) + "__"+ str(ui.FinishFreqSpinBox.value()) + ".csv"
+        file_name = "data_from_sensors" + str(ui.StartFreqSpinBox.value()) + "__"+ str(ui.FinishFreqSpinBox.value()) + "angle_valve_60" + ".csv"
     else:
-        file_name = "data_from_sensors" + str(ui.FreqspinBox.value()) + ".csv"
+        file_name = "data_from_sensors" + str(ui.FreqspinBox.value()) + "angle_valve_60" + ".csv"
     df = pd.DataFrame([dataCurrentSens, dataFlowSens])
     df = df.transpose() 
     df.to_csv(file_name, index=False, header=None)
@@ -78,6 +77,7 @@ def onClose():
     ui.statusbar.setStyleSheet("QStatusBar{padding-left:8px;color:black;background:rgb(252,179,53);font-weight:bold;}")
     ui.statusbar.showMessage("Serial port is closed", 5000)
     ui.StartButton.setChecked(False)
+    StopAll()
     serial.close()
     # analyse data from experiment
 
@@ -137,7 +137,7 @@ def startOn():
             ui.FreqspinBox.valueChanged.connect(engineFreqSpeedcontrol)
             
         elif (ui.AutoSetCheckBox.isChecked()):
-            ui.ManualSetCheckBox.isEnabled(False)
+            ui.ManualSetCheckBox.setEnabled(False)
             #engineAcceleration()
     else:
         StopAll()

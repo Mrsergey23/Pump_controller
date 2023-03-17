@@ -139,8 +139,9 @@ void loop()
       // Timer0.enableISR(CHANNEL_B);
       
 
-    //default:
-      //m_NeedStopAll(); // проверка нужна ли остановка двигателей
+    // default:
+    //   m_NeedStopAll(); // проверка нужна ли остановка двигателей
+    //   break;
     }
   }
 }

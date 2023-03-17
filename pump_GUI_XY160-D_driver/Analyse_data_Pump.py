@@ -6,7 +6,7 @@ import pandas as pd
 angle_open = 80
 data_current = []
 data_flow = []
-dir_name = "C:\\Users\\General\\Documents\\m_UNI\\11semestr\\ResearchWork_NIRS\\course_work\\Pump_controller\\data_from_experiments\\"
+dir_name = "C:/Users/General/Documents/m_UNI/11semestr/ResearchWork_NIRS/course_work/Pump_controller/data_from_experiments/"
 for i in range(40, 60, 5):
     file_name = dir_name +"data_from_sensors"+ str(i) + "angle_valve_"+ str(angle_open) + ".csv"
     with open (file_name) as r_file:

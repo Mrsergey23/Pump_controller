@@ -6,31 +6,42 @@ import pandas as pd
 angle_open = 80
 data_current = []
 data_flow = []
-dir_name = "C:/Users/General/Documents/m_UNI/11semestr/ResearchWork_NIRS/course_work/Pump_controller/data_from_experiments/"
-for i in range(40, 60, 5):
-    file_name = dir_name +"data_from_sensors"+ str(i) + "angle_valve_"+ str(angle_open) + ".csv"
-    with open (file_name) as r_file:
-        # Создаем объект reader, указываем символ-разделитель ","
+
+def read_data(_file_name_):
+    with open (_file_name_) as r_file:
         file_reader = csv.reader(r_file, delimiter = ",")
         # массивы для считывания всех данных из csv
         data_current_ls = []
-        data_flow_ls = []
+        data_flow_ls = [] 
         for row in file_reader:
             data_current_ls.append(int(row[0]))
             data_flow_ls.append(int(row[1]))
-        counter = 0
-        counter_f = 0
-        for k in range(len(data_current_ls)-1):
-            if (data_current_ls[k] > 30) and (counter < 1): # находим индекс начала периода
-                # data_current_ls[k] > 30 чтобы точно поймать первое пересечение нуля, как бы порог
-                counter += 1
-                index_start = k
-            if (data_current_ls[k] > 0 and data_current_ls[k+1] < 0 and counter_f < 5): # количество периодов, которое выводим
-                counter_f += 1
-                index_finish = k
-        data_current.append(data_current_ls[index_start:index_finish])
-        data_flow.append(data_flow_ls[index_start:index_finish])  
+    return data_current_ls, data_flow_ls
 
+def equal_begin_and_period(_data_current_, _data_flow_):
+    counter = 0
+    counter_f = 0
+    for k in range(len(_data_current_)-1):
+        if (_data_current_[k] > 30) and (counter < 1): # находим индекс начала периода
+            # data_current_ls[k] > 30 чтобы точно поймать первое пересечение нуля, как бы порог
+            counter += 1
+            index_start = k
+        if (_data_current_[k] > 0 and _data_current_[k+1] < 0 and counter_f < 5): # количество периодов, которое выводим
+            counter_f += 1
+            index_finish = k
+    data_current.append(_data_current_[index_start:index_finish])
+    data_flow.append(_data_flow_[index_start:index_finish])  
+
+def plot_builder(_data_current_): 
+    # построение обычного линейного графика
+    pass
+    
+
+dir_name = "C:/Users/General/Documents/m_UNI/11semestr/ResearchWork_NIRS/course_work/Pump_controller/data_from_experiments/"
+for i in range(40, 60, 5):
+    file_name = dir_name +"data_from_sensors"+ str(i) + "angle_valve_"+ str(angle_open) + ".csv"
+    data_full_curr, data_full_flow = read_data(file_name)
+    equal_begin_and_period(data_full_curr, data_full_flow)
 fig, ax = plt.subplots(1, 2, figsize=(8,5), gridspec_kw={'width_ratios': [5, 2]})
 plt.figure(1)
 legend = []
@@ -49,7 +60,7 @@ for j in range(len(data_current)):
 ax[0].grid()
 fig.legend(legend)
 fig.suptitle("Данные при открытии крана на " + str(angle_open)+"°") 
-#plt.show()
+plt.show()
 
 # Данные полученные при разных открытия крана вручную
 data = {'Angle': [90, 80, 70, 60, 50, 40], 'Time': [12.63,14.4,16.1,20,31,52]} 
@@ -66,20 +77,12 @@ plt.grid()
 
 #разгон
 file_name = dir_name + "data_from_sensors30__65angle_valve_60_step1Hz.csv"
-with open (file_name) as r_file:
-    # Создаем объект reader, указываем символ-разделитель ","
-    file_reader = csv.reader(r_file, delimiter = ",")
-    # массивы для считывания всех данных из csv
-    data_current_ls = []
-    data_flow_ls = []
-    for row in file_reader:
-        data_current_ls.append(int(row[0]))
-        data_flow_ls.append(int(row[1]))
-x = np.arange(0, (len(data_current_ls)), 1)
+data_full_curr, data_full_flow = read_data(file_name)
+x = np.arange(0, (len(data_full_curr)), 1)
 plt.figure(3)
-plt.plot(x, data_current_ls)
-plt.annotate(str(max(data_current_ls)),color='#293133', xy=(data_current_ls.index(max(data_current_ls)), max(data_current_ls)), 
-                   xytext=(data_current_ls.index(max(data_current_ls))+10, max(data_current_ls)+1),
+plt.plot(x, data_full_curr)
+plt.annotate(str(max(data_full_curr)),color='#293133', xy=(data_full_curr.index(max(data_full_curr)), max(data_full_curr)), 
+                   xytext=(data_full_curr.index(max(data_full_curr))+10, max(data_full_curr)+1),
              arrowprops=dict(arrowstyle="->",color='#293133'))
 plt.grid()
 plt.show()

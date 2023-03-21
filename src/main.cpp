@@ -56,6 +56,8 @@ int send_pack[2]; // возможно изменить на int, как в ор�
 uint16_t freq_step, finish_freq, time_step, total_freq;
 uint16_t start_freq;                       // variable for increasing speed at the start engine
 
+uint8_t counter_avg;
+
 ACS712 sensor(ACS712_30A, A0);
 
 void m_NeedStopAll();
@@ -88,9 +90,8 @@ void loop()
       P_pulse_Count = 0;
       send_pack[0] = P_liter_per_hour;
       float I = sensor.getCurrentDC();
-      //A_sensorValue = getSmoothedValue(I); // читаем значение с АЦП 
       send_pack[1] = I*100; 
-      m_SendData(0,send_pack, 2);
+      //m_SendData(0,send_pack, 2);
     }  
     m_ReceiveData(); // parsing of receiving command from GUI by UART
     switch (data[0])
@@ -178,4 +179,10 @@ void m_InitTimers()
 void IRQ_flow() // IRQ Handler (require interrupt 1 per 1 second)
 {
     P_pulse_Count++;
+    counter_avg ++;
+    if (counter_avg > 15)
+    {
+      m_SendData(0,send_pack, 2);
+      counter_avg = 0;
+    }
 }

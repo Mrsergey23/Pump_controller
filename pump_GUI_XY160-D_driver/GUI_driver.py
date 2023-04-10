@@ -108,8 +108,7 @@ def onRead():       # read serial data receiving by serial
     rxs = str(rx, 'utf-8').strip()
     data = rxs.split(',')
     if (data[0]) == '0':
-       ui.WFS_LCD.display(int(float(data[1])))
-    #    
+       ui.WFS_LCD.display(int(float(data[1]))) 
        dataCurrentSens.append(data[2])
        dataFlowSens.append(data[1])
        Plotting(int(data[2]))                #update value in plot of current

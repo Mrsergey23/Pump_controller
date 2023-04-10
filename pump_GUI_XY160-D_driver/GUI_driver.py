@@ -60,7 +60,7 @@ def onOpen():  # open COM-port
 def onClose():
     # сохраняем данные с момента подключения к COM-порту и до закрытия (данные приходят раз в 1 сек)
     if ui.AutoSetCheckBox.isChecked():
-        file_name = "data_from_sensors" + str(ui.StartFreqSpinBox.value()) + "__"+ str(ui.FinishFreqSpinBox.value()) + "angle_valve_90" + ".csv"
+        file_name = "data_from_sensors" + str(ui.StartFreqSpinBox.value()) + "__"+ str(ui.FinishFreqSpinBox.value()) + "angle_valve_50" + ".csv"
     else:
         file_name = "data_from_sensors" + str(ui.FreqspinBox.value()) + "angle_valve_70" + ".csv"
     df = pd.DataFrame([dataCurrentSens, dataFlowSens])
@@ -110,15 +110,10 @@ def onRead():       # read serial data receiving by serial
     if (data[0]) == '0':
        ui.WFS_LCD.display(int(float(data[1])))
     #    
-       print (len(dataCurrentSens))
-       if (len(dataCurrentSens)>0):
-            if ((data[2]!= dataCurrentSens[-1])):
-                dataCurrentSens.append(data[2])
-                dataFlowSens.append(data[1])
-                Plotting(int(data[2]))                #update value in plot of current
-                print(data[2])
-       else:
-            dataCurrentSens.append(data[2])
+       dataCurrentSens.append(data[2])
+       dataFlowSens.append(data[1])
+       Plotting(int(data[2]))                #update value in plot of current
+       print(data[2])
 
 
        

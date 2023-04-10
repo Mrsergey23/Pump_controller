@@ -4,6 +4,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 from statistics import mean
 import pandas as pd
+from mpl_toolkits.axisartist.axislines import SubplotZero
 angle_open = 80
 data_current = []
 data_flow = []
@@ -23,7 +24,7 @@ def equal_begin_and_period(_data_current_, _data_flow_):
     counter = 0
     counter_f = 0
     for k in range(len(_data_current_)-1):
-        if (_data_current_[k] > 30) and (counter < 1): # находим индекс начала периода
+        if (_data_current_[k] > 100) and (counter < 1): # находим индекс начала периода
             # data_current_ls[k] > 30 чтобы точно поймать первое пересечение нуля, как бы порог
             counter += 1
             index_start = k
@@ -66,10 +67,11 @@ def plot_builder(_data_current_):
 # # Данные полученные при разных открытия крана вручную
 data = {'Angle': [90, 80, 70, 60, 50, 40], 'Time': [12.63,14.4,16.1,20,31,52]} 
 # Create DataFrame 
-df = pd.DataFrame(data) 
+df = pd.DataFrame(data)
 # Print the output.  
 plt.figure(1)
 plt.plot(df['Angle'], df['Time'], marker = 'o', color = "orange")
+
 plt.ylabel('Время выливания')
 plt.xlabel('Угол открытия крана')
 plt.title("Эксперимент с краном")
@@ -89,7 +91,7 @@ plt.grid()
 
 # Эксперимент при одной частоте, разных углах открытия
 
-dir_name = "C:/Users/General/Documents/m_UNI/11semestr/ResearchWork_NIRS/course_work/Pump_controller/"
+dir_name = "C:/Users/General/Documents/m_UNI/11semestr/ResearchWork_NIRS/course_work/Pump_controller/data_from_experiments/"
 for i in range(90, 30, -10):
     file_name = dir_name +"data_from_sensors"+ str(45) + "angle_valve_"+ str(i) + ".csv"
     data_full_curr, data_full_flow = read_data(file_name)
@@ -103,16 +105,46 @@ for j in range(len(data_current)):
     ax2[0].set_ylabel('I, мA')
     legend.append(str(90 - j*10) + "гр. " +"{:.2f}".format(mean(data_flow[j]))+ ' L/hour')
     ax2[0].plot(x, data_current[j], linewidth=1.5, marker = 'o', linestyle = '--')
+
     #x2 = np.arange(0, 4, 1)
     ax2[1].set_xlabel('Открытие крана')
     ax2[1].set_ylabel('Q, L/hour')
     ax2[1].scatter(j, mean(data_flow[j]))
+       
+#ax2[1].scatter(np.arange(0,6,1), 2/(df['Time'].values[::-1]/3600))
+ax2[1].scatter(np.arange(0,6,1), 1.2/(df['Time']/3600))
+
+# добавление стрелок в график
+# removing the default axis on all sides:
+for side in ['bottom','right','top','left']:
+    ax2[0].spines[side].set_visible(False)
+dps = fig2.dpi_scale_trans.inverted()
+bbox = ax2[0].get_window_extent().transformed(dps)
+width, height = bbox.width, bbox.height
+
+# manual arrowhead width and length
+hw = 1./30.*(max(max(data_current))-min(min(data_current))) 
+hl = 1./30.*(x.max()-x.min())
+lw = 1 # axis line width
+ohg = 0.3 # arrow overhang
+
+    # compute matching arrowhead length and width
+  
+yhw = hw/(max(max(data_current))-min(min(data_current))) *(x.max()-x.min())* height/width 
+yhl = hl/(x.max()-x.min())*(max(max(data_current))-min(min(data_current))) * width/height
+ax2[0].arrow(0, min(min(data_current))-50, 0., (max(max(data_current))-min(min(data_current)))+100 , fc='k', ec='k', lw = lw, 
+            head_width=yhw, head_length=yhl, overhang = ohg, 
+            length_includes_head= True, clip_on = False)
+ax2[0].arrow(0, min(min(data_current))-50, x.max()-x.min()+50, 0., fc='k', ec='k', lw = lw, 
+             head_width=hw, head_length=hl, overhang = ohg, 
+             length_includes_head= True, clip_on = False) 
+    
 x_ticks = [k1 for k1 in range(6)]
 plt.xticks(ticks = x_ticks, labels = [k for k in range(90, 30, -10)])
 ax2[0].grid()
 ax2[1].grid()
 fig2.legend(legend)
-fig2.suptitle("Данные при работе крана при частоте "+str(45)+"Гц") 
+fig2.suptitle("Данные при работе крана при частоте "+str(45)+" Гц") 
 
 plt.show()
         

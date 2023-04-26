@@ -26,9 +26,9 @@ global dataCurrent_accelerate
 dataCurrent_accelerate = []
 
 # preparing for starting
-listClose = [ui.StartButton, ui.StopButton, ui.SpeedSlider, ui.InvertDirRB, ui.ManualSetCheckBox, ui.AutoSetCheckBox,
+listClose = [ui.StartButton, ui.StopButton, ui.SpeedSlider, ui.ManualSetCheckBox, ui.AutoSetCheckBox,
              ui.StartFreqSpinBox, ui.FreqStepspinBox, ui.AccelTimeSpinBox, ui.FinishFreqSpinBox, ui.FreqspinBox
-             , ui.AccelarationStartButton]
+             , ui.AccelarationStartButton, ui.Sampling_spinBox]
 for i in listClose:
     i.setEnabled(False)
 ui.SliderShowLabel.setText(str(float('{:.1f}'.format(((ui.SpeedSlider.value()/ui.SpeedSlider.maximum())*100)))))
@@ -45,7 +45,7 @@ def onOpen():  # open COM-port
         ui.StopButton.setEnabled(True)
         ui.statusbar.setStyleSheet("QStatusBar{padding-left:8px;background:rgba(0,255,0,125);color:black;font-weight:bold;}")
         ui.statusbar.showMessage("Succes! Serial port is open", 5000)
-        listOpen  = [ui.StartButton, ui.StopButton, ui.SpeedSlider, ui.InvertDirRB, ui.ManualSetCheckBox,
+        listOpen  = [ui.StartButton, ui.StopButton, ui.SpeedSlider, ui.ManualSetCheckBox,
                      ui.AutoSetCheckBox,
                      ui.StartFreqSpinBox, ui.FreqStepspinBox, ui.AccelTimeSpinBox, ui.FinishFreqSpinBox, ui.FreqspinBox
             , ui.AccelarationStartButton]
@@ -71,7 +71,7 @@ def onClose():
  
     listClose = [ui.StartButton, ui.StopButton, ui.SpeedSlider,ui.StartFreqLabel,
                  ui.StartFreqSpinBox, ui.FreqStepspinBox, ui.AccelTimeSpinBox, ui.FinishFreqSpinBox, ui.FreqspinBox
-                 , ui.EngineFreqLabel, ui.EngineSpeedLabel, ]
+                 , ui.EngineFreqLabel ]
     for i in listClose:
         i.setEnabled(False)
     ui.statusbar.setStyleSheet("QStatusBar{padding-left:8px;color:black;background:rgb(252,179,53);font-weight:bold;}")
@@ -95,8 +95,7 @@ def engineControl():
     serialSend([])
 
 def StopAll():
-    print([2])
-    serialSend([2])
+    serialSend([3])
 
 def toFixed(numObj, digits=0):
     return f"{numObj:.{digits}f}"
@@ -106,20 +105,17 @@ def toFixed(numObj, digits=0):
 def onRead():       # read serial data receiving by serial    
     rx = serial.readLine()
     rxs = str(rx, 'utf-8').strip()
-    data = rxs.split(',')
+    data = rxs.split(',') 
     if (data[0]) == '0':
        ui.WFS_LCD.display(int(float(data[1]))) 
        dataCurrentSens.append(data[2])
        dataFlowSens.append(data[1])
        Plotting(int(data[2]))                #update value in plot of current
-       print(data[2])
-
-
        
 def engineFreqSpeedcontrol(): # 1st Option - working on constant frequency
     if (ui.StartButton.isChecked() & ui.ManualSetCheckBox.isChecked()):
-        serialSend([3,ui.FreqspinBox.value(), 1])
-        print([3, ui.FreqspinBox.value(), 1])
+        serialSend([1,ui.FreqspinBox.value(), 0, 0, ui.Sampling_spinBox.value()])
+        print([1, ui.FreqspinBox.value(), 0, 0, ui.Sampling_spinBox.value()])
         ui.SliderShowLabel.setStyleSheet("QLabel { font-weight:bold; color : blue; }")   
     else:
         ui.SliderShowLabel.setStyleSheet("QLabel { font-weight:bold; color : black; }")  
@@ -159,10 +155,9 @@ def engineAcceleration():
             show_popup()
         #time_of_accelaration = ((finish_value-start_value)/freq_step)*time_step/1000
         #ui.TimlcdNumber.display(time_of_accelaration)
-        serialSend([4, start_value, finish_value, time_step, ui.SpeedSlider.value(),ui.FreqStepspinBox.value(),
-                int(not(ui.InvertDirRB.isChecked())), int(ui.InvertDirRB.isChecked())]) # последние два значения передаем для выбора направления
+        serialSend([2, start_value, finish_value, time_step, ui.SpeedSlider.value(),ui.FreqStepspinBox.value(),]) 
         Plotting(ui.SpeedSlider.value())
-        print([4, start_value, finish_value, time_step, ui.SpeedSlider.value(),ui.FreqStepspinBox.value()])
+        print([2, start_value, finish_value, time_step, ui.SpeedSlider.value(),ui.FreqStepspinBox.value()])
         ui.SliderShowLabel.setStyleSheet("QLabel { font-weight:bold; color : blue; }")  
     else:
         ui.SliderShowLabel.setStyleSheet("QLabel { font-weight:bold; color : black; }") 
@@ -214,7 +209,6 @@ ui.CloseButton.clicked.connect(onClose)
 ui.StartButton.clicked.connect(startOn)
 ui.StopButton.clicked.connect(stopOn)
 ui.SpeedSlider.valueChanged.connect(engineFreqSpeedcontrol)
-ui.InvertDirRB.toggled.connect(engineFreqSpeedcontrol)
 ui.AccelarationStartButton.clicked.connect(engineAcceleration)
 ui.ManualSetCheckBox.clicked.connect(ManualCBclick)
 ui.AutoSetCheckBox.clicked.connect(AutoCBclick)

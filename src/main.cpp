@@ -83,16 +83,12 @@ void loop()
   if (Serial.availableForWrite() > 0)         // waiting command by serial
   {
     Current_Time = millis();
-    if(Current_Time >= (Loop_Time + PERIOD_DATA_FROM_SENSORS))
-    {
-      Loop_Time = Current_Time;
-      P_liter_per_hour = (P_pulse_Count * 60 * 1000/PERIOD_DATA_FROM_SENSORS / 7.5);
-      P_pulse_Count = 0;
-      send_pack[0] = P_liter_per_hour;
-      float I = sensor.getCurrentDC();
-      send_pack[1] = I*100; 
-      //m_SendData(0,send_pack, 2);
-    }  
+    P_liter_per_hour = (P_pulse_Count * 60 * 1000/PERIOD_DATA_FROM_SENSORS / 7.5);
+    P_pulse_Count = 0;
+    send_pack[0] = P_liter_per_hour;
+    float I = sensor.getCurrentDC();
+    send_pack[1] = I*100; 
+    m_SendData(0,send_pack, 2);
     m_ReceiveData(); // parsing of receiving command from GUI by UART
     switch (data[0])
     {
@@ -118,10 +114,9 @@ void loop()
       digitalWrite(ENA, 1);
       while (start_freq <= finish_freq)
       {
-      Timer_stepper = millis();
-        if (Timer_stepper >= loop_accelerating + time_step) 
-        {   //Timer with period "time_step"
-          loop_accelerating = Timer_stepper;           // reset timer
+        if (millis()-Current_Time >= 50)
+        {
+          Current_Time = millis();
           Timer1.setFrequency(start_freq * 2);
           start_freq +=  freq_step; 
           P_liter_per_hour = (P_pulse_Count * 60 * 1000/time_step / 7.5);
@@ -132,6 +127,7 @@ void loop()
           send_pack[1] = I*100; 
           m_SendData(0,send_pack, 2);
         }
+        P_pulse_Count = 0;
       }
 
       break;
@@ -166,7 +162,7 @@ void m_NeedStopAll()
   }
 }
 
-void m_InitTimers()
+void InitTimers()
 {
   TCCR1A = (TCCR1A & 0xF0);
   TCCR1B = (1 << WGM13) | (1 << WGM12) ;
@@ -179,10 +175,5 @@ void m_InitTimers()
 void IRQ_flow() // IRQ Handler (require interrupt 1 per 1 second)
 {
     P_pulse_Count++;
-    counter_avg ++;
-    if (counter_avg > 15)
-    {
-      m_SendData(0,send_pack, 2);
-      counter_avg = 0;
-    }
+  
 }
